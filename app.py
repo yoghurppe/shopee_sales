@@ -13,13 +13,17 @@ def fetch_items(market, url):
     res = requests.get(url, headers={"User-Agent": "Mozilla/5.0"})
     soup = BeautifulSoup(res.text, "html.parser")
     titles, solds = [], []
-    for item in soup.select("div.shopee-search-item-result__item"):
-        title = item.select_one("._10Wbs-")
-        sold = item.select_one(".r6HknA")
-        if title and sold:
-            titles.append(title.text.strip())
-            solds.append(sold.text.strip())
+
+    for item in soup.select('div.shopee-search-item-result__item'):
+        title_tag = item.find('div', attrs={'data-sqe': 'name'})
+        sold_tag = item.find('div', string=lambda s: s and 'sold' in s)
+
+        if title_tag and sold_tag:
+            titles.append(title_tag.get_text(strip=True))
+            solds.append(sold_tag.get_text(strip=True))
+
     return pd.DataFrame({"商品名": titles, "販売数": solds})
+
 
 if st.button("📊 データ取得"):
     urls = {
